@@ -1,0 +1,22 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_utils/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_remote/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/build/arduinobot_py_examples",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_py_examples/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_interfaces/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_firmware/lib/python3.12/site-packages",
+        "/home/furky/workspace/protobot_ws/install/protobot_interfaces/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_utils/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_remote/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/build/arduinobot_py_examples",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_py_examples/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_interfaces/lib/python3.12/site-packages",
+        "/home/furky/workspace/arduinobot_ws/install/arduinobot_firmware/lib/python3.12/site-packages",
+        "/home/furky/workspace/protobot_ws/install/protobot_interfaces/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ]
+}
