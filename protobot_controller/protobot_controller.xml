@@ -1,0 +1,10 @@
+<library path="protobot_controller">
+    <class name="protobot_controller/ProtobotInterface"
+           type="protobot_controller::ProtobotInterface"
+           base_class_type="hardware_interface::SystemInterface">
+        <description>
+            Protobot Hardware Interface
+        </description>
+    </class>
+
+</library>

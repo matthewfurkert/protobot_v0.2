@@ -20,7 +20,7 @@ def generate_launch_description():
          LaunchConfiguration('model')]
     )
     rviz_config_path = PathJoinSubstitution(
-        [pkg_protobot_description, "rviz",
+        [pkg_protobot_description, "config",
          "display.rviz"]
     )
     controller_file_path = PathJoinSubstitution(
