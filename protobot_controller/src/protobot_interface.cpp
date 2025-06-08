@@ -55,7 +55,8 @@ hardware_interface::CallbackReturn ProtobotInterface::on_init(const hardware_int
 
     try
     {
-        ShoulderMotor = std::make_unique<Motor>(0, 0);
+        sensor_map_["shoulder/position"] = std::make_unique<Sensor>(0x36);
+        motor_map_["shoulder/position"] = std::make_unique<Motor>(0, 0);
     }
     catch(const std::out_of_range &e)
     {
@@ -79,20 +80,40 @@ hardware_interface::CallbackReturn ProtobotInterface::on_configure(const rclcpp_
   }
   RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Sucessfully configured command and state interfaces!");
 
+  //open up i2c bus
+  bus = open_bus(3);  // Opens I2C bus number 3
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn ProtobotInterface::on_activate(
     const rclcpp_lifecycle::State & /*previous_state*/)
 {    
-    RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Starting the robot hardware...");
-    // command and state should be equal when starting
+    RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Reading joint position values...");
+
     for (const auto & [name, descr] : joint_state_interfaces_)
     {
-        set_command(name, get_state(name));
+        auto sensor = sensor_map_.find(name);
+        if (sensor != sensor_map_.end())
+        {
+            set_command(name, sensor->second->get_angle_degrees(bus));
+        }
+        else
+        {
+            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s motor in sensor map", name.c_str());
+            return hardware_interface::CallbackReturn::FAILURE;
+        }
+        auto motor = motor_map_.find(name);
+        if (motor != motor_map_.end()) 
+        {
+            motor->second->activate();
+        }
+        else
+        {
+            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s motor in motor map", name.c_str());
+            return hardware_interface::CallbackReturn::FAILURE;
+        }
     }
-
-    ShoulderMotor->activate();
 
     RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Hardware started, ready to take commands");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -102,8 +123,21 @@ hardware_interface::CallbackReturn ProtobotInterface::on_deactivate(
     const rclcpp_lifecycle::State & /*previous_state*/)
 {    
     RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Stopping the robot hardware...");
-    
-    ShoulderMotor->deactivate();
+
+    // shoulder_motor->deactivate();
+    for (const auto & [name, descr] : joint_state_interfaces_)
+    {
+        auto motor = motor_map_.find(name);
+        if (motor != motor_map_.end()) 
+        {
+            motor->second->deactivate();
+        }
+        else
+        {
+            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s motor in motor map", name.c_str());
+            return hardware_interface::CallbackReturn::FAILURE;
+        }
+    }
 
     RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Hardware stopped");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -114,8 +148,18 @@ hardware_interface::return_type ProtobotInterface::read(
 {   
     for (const auto & [name, descr] : joint_state_interfaces_)
     {
-        auto new_value = get_command(name);
-        set_state(name, new_value);
+        auto sensor = sensor_map_.find(name);
+        if (sensor != sensor_map_.end())
+        {
+            auto new_value = sensor->second->get_angle_degrees(bus);
+            set_state(name, new_value);
+        }
+        else
+        {
+            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s motor in sensor map", name.c_str());
+            return hardware_interface::return_type::ERROR;
+        }
+        
     }
     return hardware_interface::return_type::OK;
 }
@@ -139,17 +183,22 @@ hardware_interface::return_type ProtobotInterface::write(
         return hardware_interface::return_type::OK;
     }
 
-    // Set the new command
-    // Shoulder joint
-    double shoulder_pos = get_command(position_interfaces_.at(0));
-    int shoulder = static_cast<int>(180 - (shoulder_pos + (M_PI/2)) * (180 / M_PI));
-
-    ShoulderMotor->set_angle(shoulder);
-
     // Update previous commands
     // for (const auto& name : position_interfaces_) {
     for (const auto & [name, descr] : joint_command_interfaces_) {
-        prev_position_commands_[name] = get_command(name);
+         auto motor = motor_map_.find(name);
+        if (motor != motor_map_.end())
+        {
+            double new_pos = static_cast<int>(get_command(name) * (180 / M_PI));
+
+            motor->second->set_angle(new_pos);
+            prev_position_commands_[name] = new_pos;
+        }
+        else
+        {
+            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s motor in motor map", name.c_str());
+            return hardware_interface::return_type::ERROR;
+        }
     }
 
     return hardware_interface::return_type::OK;

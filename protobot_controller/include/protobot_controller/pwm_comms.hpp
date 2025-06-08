@@ -9,7 +9,7 @@ private:
     PWM pwm;                // PWM object to control the servo
     double min_pulse_width; // Minimum pulse width in seconds (e.g., 0.0005 for 0.5ms)
     double max_pulse_width; // Maximum pulse width in seconds (e.g., 0.0025 for 2.5ms)
-    double period;          // PWM period in seconds (e.g., 0.02 for 50 Hz)
+    int frequency;          // PWM frequency in Hz
     double current_angle;   // Current angle of the servo in degrees
     bool is_active;         // Flag to check if the servo is active
 
@@ -20,22 +20,24 @@ private:
      */
     double angle_to_duty_cycle(double angle) const {
         double pulse_width = min_pulse_width + (max_pulse_width - min_pulse_width) * (angle / 180.0);
-        return pulse_width / period;
+        return pulse_width * frequency;
     }
 
 public:
     /**
-     * @brief Constructs a Motor object.
+     * @brief Constructs a Motor object. double angle_to_duty_cycle(double angle) const {
+        double pulse_width = min_pulse_width + (max_pulse_width - min_pulse_width) * (angle / 180.0);
+        return pulse_width * frequency;
+    }
      * @param chip PWM chip number.
      * @param channel PWM channel number.
      * @param min_pw Minimum pulse width in seconds (default: 0.0005s or 0.5ms).
      * @param max_pw Maximum pulse width in seconds (default: 0.0025s or 2.5ms).
      */
     Motor(int chip, int channel, double min_pw = 0.0005, double max_pw = 0.0025)
-        : pwm(chip, channel), min_pulse_width(min_pw), max_pulse_width(max_pw), current_angle(90.0), is_active(false) {
-        pwm.set_frequency(50);                  // Set frequency to 50 Hz
-        period = 1.0 / 50.0;                    // Calculate period (20ms)
-        pwm.set_polarity("normal");            // Set polarity to normal
+        : pwm(chip, channel), min_pulse_width(min_pw), max_pulse_width(max_pw), frequency(50), current_angle(90.0), is_active(false) {
+        pwm.set_frequency(frequency);           // Set frequency
+        pwm.set_polarity("normal");             // Set polarity to normal
         // Do not set duty cycle or enable PWM here to keep the servo relaxed
     }
 

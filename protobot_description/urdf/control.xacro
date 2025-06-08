@@ -16,7 +16,7 @@
                 </hardware>
             </xacro:unless>
 
-            <joint name="shoulder_joint">
+            <joint name="shoulder">
                 <command_interface name="position">
                     <param name="min">-${(3*pi) / 4.0}</param>
                     <param name="max">${(3*pi) / 4.0}</param>

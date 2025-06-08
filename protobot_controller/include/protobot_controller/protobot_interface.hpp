@@ -9,11 +9,13 @@
 #include "rclcpp/macros.hpp"
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
+#include "protobot_controller/i2c_comms.hpp"
 #include "protobot_controller/pwm_comms.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace protobot_controller 
 {
@@ -34,11 +36,11 @@ public:
     hardware_interface::return_type write(const rclcpp::Time &time, const rclcpp::Duration &period) override;
 
 private:
-    std::vector<std::string> position_interfaces_ = {
-        "shoulder_joint/position",
-    };
+    std::shared_ptr<SMBus> bus;
+
+    std::unordered_map<std::string, std::unique_ptr<Sensor>> sensor_map_;
+    std::unordered_map<std::string, std::unique_ptr<Motor>> motor_map_;
     std::unordered_map<std::string, double> prev_position_commands_;
-    std::unique_ptr<Motor> ShoulderMotor;
 };
 }
 #endif

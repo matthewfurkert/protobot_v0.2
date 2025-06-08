@@ -51,13 +51,13 @@ def generate_launch_description():
         ],
     )
 
-    rviz2_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        condition=UnlessCondition(LaunchConfiguration("is_sim")),
-        output='screen',
-        arguments=['-d', rviz_config_path]
-    )
+    # rviz2_node = Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     condition=UnlessCondition(LaunchConfiguration("is_sim")),
+    #     output='screen',
+    #     arguments=['-d', rviz_config_path]
+    # )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -84,7 +84,7 @@ def generate_launch_description():
         is_sim_arg,
         robot_state_publisher_node,
         controller_manager,
-        rviz2_node,
+        # rviz2_node,
         joint_state_broadcaster_spawner,
         arm_controller_spawner,
     ])

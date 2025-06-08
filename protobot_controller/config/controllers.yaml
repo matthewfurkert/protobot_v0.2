@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100
+    update_rate: 60
     arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
     
@@ -10,7 +10,7 @@ controller_manager:
 arm_controller:
   ros__parameters:
     joints:
-      - shoulder_joint
+      - shoulder
 
     command_interfaces:
       - position
@@ -24,6 +24,6 @@ arm_controller:
     interpolate_from_desired_state: true
     constraints:
       goal_time: 0.0
-      shoulder_joint:
+      shoulder:
         trajectory: 0.1
         goal: 0.03

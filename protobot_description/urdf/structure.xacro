@@ -60,7 +60,7 @@
         <child link="base_link" />
     </joint>
 
-    <joint name="shoulder_joint" type="revolute">
+    <joint name="shoulder" type="revolute">
         <origin xyz="0.03 0 0.28" rpy="0 0 0" />
         <parent link="base_link" />
         <child link="upper_link" />
