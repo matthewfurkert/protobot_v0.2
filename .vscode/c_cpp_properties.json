@@ -6,13 +6,9 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/furky/workspace/arduinobot_ws/install/arduinobot_interfaces/include/**",
-        "/home/furky/workspace/arduinobot_ws/install/arduinobot_controller/include/**",
-        "/home/furky/workspace/protobot_ws/install/protobot_interfaces/include/**",
-        "/home/furky/workspace/protobot_ws/install/protobot_controller/include/**",
         "/opt/ros/jazzy/include/**",
-        "/home/furky/workspace/protobot_v0.2_ws/src/protobot_description/include/**",
-        "/usr/include/**"
+        "/usr/include/**",
+        "${workspaceFolder}/protobot_controller/include/**"        
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

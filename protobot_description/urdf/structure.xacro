@@ -65,7 +65,7 @@
         <parent link="base_link" />
         <child link="upper_link" />
         <axis xyz="1 0 0" />
-        <limit lower="-${(3*pi)/4}" upper="${(3*pi)/4}" effort="10" velocity="1" />
+        <limit lower="0.0" upper="${(3*pi)/2}" effort="10" velocity="1" />
     </joint>
 
 </robot>

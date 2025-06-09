@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdexcept>
 #include <memory>
+#include <cmath>
 
 inline std::shared_ptr<SMBus> open_bus(int bus_number) {
     return std::make_shared<SMBus>(bus_number);
@@ -38,6 +39,12 @@ public:
     double get_angle_degrees(std::shared_ptr<SMBus> bus) {
         uint16_t raw_angle = read_raw_angle(bus);
         return static_cast<double>(raw_angle) * 360.0 / 4096.0;
+    }
+
+    // Computes and returns the angle in radians
+    double get_angle_radians(std::shared_ptr<SMBus> bus) {
+        uint16_t raw_angle = read_raw_angle(bus);
+        return static_cast<double>(raw_angle) * 2.0 * M_PI / 4096.0;
     }
 
 private:

@@ -100,7 +100,7 @@ hardware_interface::CallbackReturn ProtobotInterface::on_activate(
         }
         else
         {
-            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s motor in sensor map", name.c_str());
+            RCLCPP_FATAL(rclcpp::get_logger("Protobot Interface"), "Unable to find %s sensor in sensor map", name.c_str());
             return hardware_interface::CallbackReturn::FAILURE;
         }
         auto motor = motor_map_.find(name);
@@ -124,7 +124,6 @@ hardware_interface::CallbackReturn ProtobotInterface::on_deactivate(
 {    
     RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Stopping the robot hardware...");
 
-    // shoulder_motor->deactivate();
     for (const auto & [name, descr] : joint_state_interfaces_)
     {
         auto motor = motor_map_.find(name);
@@ -151,8 +150,9 @@ hardware_interface::return_type ProtobotInterface::read(
         auto sensor = sensor_map_.find(name);
         if (sensor != sensor_map_.end())
         {
-            auto new_value = sensor->second->get_angle_degrees(bus);
+            auto new_value = sensor->second->get_angle_radians(bus);
             set_state(name, new_value);
+            // RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Joint '%s' angle: %f radians", name.c_str(), new_value);
         }
         else
         {
@@ -170,11 +170,10 @@ hardware_interface::return_type ProtobotInterface::write(
 
     // Check if all current commands match the previous ones
     bool all_match = true;
-    // for (const auto& name : position_interfaces_) {
     for (const auto & [name, descr] : joint_command_interfaces_) {
         double current = get_command(name);
-        // If the interface isn't in prev_position_commands_ yet (first run) or values differ
-        if (prev_position_commands_.find(name) == prev_position_commands_.end() || current != prev_position_commands_[name]) {
+        // If the values differ or joint prev_position_commands_ hasn't been set yet (first run)
+        if (current != prev_position_commands_[name] || prev_position_commands_.find(name) == prev_position_commands_.end()) {
             all_match = false;
             break;
         }
@@ -184,14 +183,13 @@ hardware_interface::return_type ProtobotInterface::write(
     }
 
     // Update previous commands
-    // for (const auto& name : position_interfaces_) {
     for (const auto & [name, descr] : joint_command_interfaces_) {
          auto motor = motor_map_.find(name);
         if (motor != motor_map_.end())
         {
             double new_pos = static_cast<int>(get_command(name) * (180 / M_PI));
 
-            motor->second->set_angle(new_pos);
+            motor->second->set_speed(new_pos);
             prev_position_commands_[name] = new_pos;
         }
         else
