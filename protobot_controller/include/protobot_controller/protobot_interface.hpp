@@ -26,7 +26,7 @@ class ProtobotInterface : public hardware_interface::SystemInterface
 public:
     RCLCPP_SHARED_PTR_DEFINITIONS(ProtobotInterface)
 
-    hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo &hardware_info) override;
+    hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) override;
     hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
     hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state) override;
@@ -41,6 +41,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<Sensor>> sensor_map_;
     std::unordered_map<std::string, std::unique_ptr<Motor>> motor_map_;
     std::unordered_map<std::string, double> prev_position_commands_;
+    std::unordered_map<std::string, double> current_command_;
 };
 }
 #endif

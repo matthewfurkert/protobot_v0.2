@@ -13,42 +13,44 @@ inline std::shared_ptr<SMBus> open_bus(int bus_number) {
 }
 
 class Sensor {
+    uint8_t address_;
+
+    std::vector<uint8_t> i2c_read(SMBus& bus, uint8_t reg, uint8_t count) const {
+        try {
+            // Combine write and read into a single transaction to avoid repeated START conditions
+            I2cMsg write_msg = I2cMsg::write(address_, {reg});
+            I2cMsg read_msg = I2cMsg::read(address_, count);
+            
+            // Single i2cRdwr call with both write and read messages
+            bus.i2cRdwr({write_msg, read_msg});
+            
+            auto data = read_msg.getData();
+            if (data.size() != count) {
+                throw std::runtime_error("Read size mismatch");
+            }
+            return data;
+        } catch (const std::exception& e) {
+            throw std::runtime_error("I2C read failed: " + std::string(e.what()));
+        }
+    }
+
 public:
-    // Constructor: Takes only the I2C address of the sensor
-    Sensor(uint8_t address) : address(address) {}
+    explicit Sensor(uint8_t address) : address_(address) {}
 
-    // Reads the raw angle (12-bit value) from the sensor
-    uint16_t read_raw_angle(std::shared_ptr<SMBus> bus) {
-        std::vector<uint8_t> data = bus->readI2cBlockData(address, 0x0C, 2);
-        if (data.size() != 2) {
-            throw std::runtime_error("Failed to read 2 bytes for angle");
-        }
+    uint16_t read_raw_angle(SMBus& bus) const {
+        auto data = i2c_read(bus, 0x08, 2);
         return (static_cast<uint16_t>(data[0]) << 8) | data[1];
     }
 
-    // Reads the magnitude from the sensor
-    uint16_t read_magnitude(std::shared_ptr<SMBus> bus) {
-        std::vector<uint8_t> data = bus->readI2cBlockData(address, 0x1B, 2);
-        if (data.size() != 2) {
-            throw std::runtime_error("Failed to read 2 bytes for magnitude");
-        }
+    uint16_t read_magnitude(SMBus& bus) const {
+        auto data = i2c_read(bus, 0x1B, 2);
         return (static_cast<uint16_t>(data[0]) << 8) | data[1];
     }
 
-    // Computes and returns the angle in degrees
-    double get_angle_degrees(std::shared_ptr<SMBus> bus) {
-        uint16_t raw_angle = read_raw_angle(bus);
-        return static_cast<double>(raw_angle) * 360.0 / 4096.0;
+    double get_angle_radians(SMBus& bus) const {
+        return static_cast<double>(read_raw_angle(bus)) * 2.0 * M_PI / 4096.0;
     }
 
-    // Computes and returns the angle in radians
-    double get_angle_radians(std::shared_ptr<SMBus> bus) {
-        uint16_t raw_angle = read_raw_angle(bus);
-        return static_cast<double>(raw_angle) * 2.0 * M_PI / 4096.0;
-    }
-
-private:
-    uint8_t address; // I2C address of the sensor
 };
 
 #endif // I2C_COMMS_HPP

@@ -6,11 +6,11 @@
 namespace protobot_controller
 {
 
-hardware_interface::CallbackReturn ProtobotInterface::on_init(const hardware_interface::HardwareInfo &hardware_info)
+hardware_interface::CallbackReturn ProtobotInterface::on_init(const hardware_interface::HardwareComponentInterfaceParams& params)
 {
 
     if (
-        hardware_interface::SystemInterface::on_init(hardware_info) !=
+        hardware_interface::SystemInterface::on_init(params) !=
         hardware_interface::CallbackReturn::SUCCESS)
       {
         return hardware_interface::CallbackReturn::ERROR;
@@ -55,7 +55,7 @@ hardware_interface::CallbackReturn ProtobotInterface::on_init(const hardware_int
 
     try
     {
-        sensor_map_["shoulder/position"] = std::make_unique<Sensor>(0x36);
+        sensor_map_["shoulder/position"] = std::make_unique<Sensor>(0x12);
         motor_map_["shoulder/position"] = std::make_unique<Motor>(0, 0);
     }
     catch(const std::out_of_range &e)
@@ -96,7 +96,7 @@ hardware_interface::CallbackReturn ProtobotInterface::on_activate(
         auto sensor = sensor_map_.find(name);
         if (sensor != sensor_map_.end())
         {
-            set_command(name, sensor->second->get_angle_degrees(bus));
+            set_command(name, sensor->second->get_angle_radians(*bus));
         }
         else
         {
@@ -150,9 +150,11 @@ hardware_interface::return_type ProtobotInterface::read(
         auto sensor = sensor_map_.find(name);
         if (sensor != sensor_map_.end())
         {
-            auto new_value = sensor->second->get_angle_radians(bus);
+            RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Reading Joint angle in radians");
+            auto new_value = sensor->second->get_angle_radians(*bus);
+            RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Joint '%s' angle: %f radians", name.c_str(), new_value);
             set_state(name, new_value);
-            // RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Joint '%s' angle: %f radians", name.c_str(), new_value);
+            //RCLCPP_INFO(rclcpp::get_logger("ProtobotInterface"), "Joint '%s' angle: %f radians", name.c_str(), new_value);
         }
         else
         {
@@ -171,9 +173,9 @@ hardware_interface::return_type ProtobotInterface::write(
     // Check if all current commands match the previous ones
     bool all_match = true;
     for (const auto & [name, descr] : joint_command_interfaces_) {
-        double current = get_command(name);
+        current_command_[name] = get_command(name);
         // If the values differ or joint prev_position_commands_ hasn't been set yet (first run)
-        if (current != prev_position_commands_[name] || prev_position_commands_.find(name) == prev_position_commands_.end()) {
+        if (current_command_[name] != prev_position_commands_[name] || prev_position_commands_.find(name) == prev_position_commands_.end()) {
             all_match = false;
             break;
         }
@@ -187,10 +189,10 @@ hardware_interface::return_type ProtobotInterface::write(
          auto motor = motor_map_.find(name);
         if (motor != motor_map_.end())
         {
-            double new_pos = static_cast<int>(get_command(name) * (180 / M_PI));
+            double new_pos = static_cast<int>(current_command_[name] * (180 / M_PI));
 
             motor->second->set_speed(new_pos);
-            prev_position_commands_[name] = new_pos;
+            prev_position_commands_[name] = current_command_[name];
         }
         else
         {
